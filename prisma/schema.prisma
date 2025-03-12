@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+  directUrl = "file:./referral_system.db?timeout=30000"
+}
+
+
+model Customer {
+  id                Int             @id @default(autoincrement())
+  shopifyId         String          @unique
+  email             String          @unique
+  name              String
+  referralCode      String          @unique
+  referralBalance   Float           @default(0.0)
+  referralCount     Int             @default(0)
+  payoutStatus      String          @default("none")
+  referredById      String?            // Foreign key to the referring customer
+  referredBy        Customer?       @relation("CustomerReferrals", fields: [referredById], references: [shopifyId])
+  referrals         Customer[]      @relation("CustomerReferrals")
+  payouts           PayoutHistory[] // Back-relation field
+  createdAt         DateTime        @default(now())
+}
+
+
+
+model PayoutHistory {
+  id             Int      @id @default(autoincrement())
+  payoutId       String   @unique
+  customerId     Int
+  amount         Float
+  currency       String
+  status         String
+  failureCode    String?
+  failureMessage String?
+  destination    String
+  method         String
+  arrivalDate    DateTime?
+  changedAt      DateTime @default(now())
+  customer       Customer @relation(fields: [customerId], references: [id])
+}
+
